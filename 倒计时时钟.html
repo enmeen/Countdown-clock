@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+1.50ms为一帧，进行动画
+2.balls数组将即将变掉的数字保存起来，这些数字将的信息将提供给掉落小球的信息。
+3.在1秒之内balls数组中的信息是不会变化的。所以这时候ballUpdata函数，就在这段时间内50ms为一帧的，对balls中保存的小球属性进行操作。
+4.优化：删除balls中滚出画面的小球
+5.bug：切屏幕后，小球堆积。因为超过了设置的500个小球最大值，将没有小球掉落。画面中小球数低于500.-->
+<head>
+    <meta charset="UTF-8" />
+    <title>倒计时时钟</title>
+    <style type="text/css">
+    * {
+        margin: 0;
+        padding: 0;
+    }
+    /* 撑开屏幕 */
+    html,body,canvas{
+        height: 100%;
+        width: 100%;
+    }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <script type="text/javascript" src='digit.js'></script>
+    <script type="text/javascript">
+    window.onload = function() {
+
+        var WIDTH = document.body.clientWidth;
+        var HEIGHT = document.body.clientHeight;
+        console.log(HEIGHT);
+        var MARGINLEFT =  Math.round(WIDTH/15);
+        var MARGINTOP = HEIGHT/5; //离顶部长度
+        var r = Math.round(WIDTH/5*4/108)-1;
+        var newTime = new Date(2016, 2, 1, 18, 30, 50).getTime(); //目标日期:注意月份
+        var restTime = getCurrentSecond();
+        var balls = []; //用来存储要掉落的小球
+        var COLOR = ["#a8a8a8", '#71BFBF', '#F51A1A', '#21E015', '#292929', '#F20D90', '#292929', '#121A89', '#0FDBAD']
+       
+        var canvas = document.getElementById('canvas');
+        canvas.width = WIDTH;
+        canvas.height = HEIGHT;
+        var c = canvas.getContext('2d');
+
+        setInterval(function() {
+            render(c);
+            updata();
+            
+        }, 50);
+
+
+        function getCurrentSecond() { //获取还剩时长
+            var nowTime = new Date().getTime();
+            var ret = Math.round((newTime - nowTime) / 1000);
+            return ret > 0 ? ret : 0;
+        }
+
+
+        function updata() { //刷新日期
+            var newrestTime = getCurrentSecond();
+
+            var newhour = parseInt(newrestTime / 3600);
+            var newmin = parseInt((newrestTime - newhour * 3600) / 60);
+            var newsec = parseInt(newrestTime % 60);
+
+            var currenthour = parseInt(restTime / 3600);
+            var currentmin = parseInt((restTime - currenthour * 3600) / 60);
+            var currentsec = parseInt(restTime % 60);
+
+            if (currentsec != newsec) {
+                if (parseInt(newhour / 10) != parseInt(currenthour / 10)) { //小时的十位数变化时，执行addBall，后面一次类推
+                    addBall(MARGINLEFT, MARGINTOP, parseInt(currenthour / 10), c)
+                }
+                if (parseInt(newhour % 10) != parseInt(currenthour % 10)) {
+                    addBall(MARGINLEFT + 15 * (r + 1), MARGINTOP, parseInt(currenthour % 10))
+                }
+                if (parseInt(newmin / 10) != parseInt(currentmin / 10)) {
+                    addBall(MARGINLEFT + 39 * (r + 1), MARGINTOP, parseInt(currentmin / 10))
+                }
+                if (parseInt(newmin % 10) != parseInt(newmin % 10)) {
+                    addBall(MARGINLEFT + 54 * (r + 1), MARGINTOP, parseInt(currentmin % 10))
+                }
+                if (parseInt(newsec / 10) != parseInt(currentsec / 10)) {
+                    addBall(MARGINLEFT + 78 * (r + 1), MARGINTOP, parseInt(currentsec / 10))
+                }
+                if (parseInt(newsec % 10) != parseInt(currentsec % 10)) {
+                    console.log('dsad')
+                    addBall(MARGINLEFT + 93 * (r + 1), MARGINTOP, parseInt(currentsec % 10))
+                }
+                restTime = newrestTime;
+            }
+            ballUpdata();
+
+        }
+
+
+
+
+        function render(cxt) { //绘制小球图像函数
+            cxt.clearRect(0, 0, cxt.canvas.width, cxt.canvas.height); //变换前清空画板
+            var hour = parseInt(restTime / 3600);
+            var min = parseInt((restTime - hour * 3600) / 60);
+            var sec = parseInt(restTime % 60);
+
+            renderDigit(MARGINLEFT, MARGINTOP, parseInt(hour / 10), c); //小时的十位数
+            renderDigit(MARGINLEFT + 15 * (r + 1), MARGINTOP, hour % 10, c);
+
+            renderDigit(MARGINLEFT + 30 * (r + 1), MARGINTOP, 10, c); //:   后面跟的数字要x值要提前
+
+            renderDigit(MARGINLEFT + 39 * (r + 1), MARGINTOP, parseInt(min / 10), c);
+            renderDigit(MARGINLEFT + 54 * (r + 1), MARGINTOP, min % 10, c);
+
+            renderDigit(MARGINLEFT + 69 * (r + 1), MARGINTOP, 10, c); //:
+
+            renderDigit(MARGINLEFT + 78 * (r + 1), MARGINTOP, parseInt(sec / 10), c);
+            renderDigit(MARGINLEFT + 93 * (r + 1), MARGINTOP, sec % 10, c);
+            for (var i = 0; i < balls.length; i++) {
+                c.beginPath();
+                cxt.fillStyle = balls[i].color;
+                c.arc(balls[i].x, balls[i].y, r, 0, 2 * Math.PI, false);
+                c.closePath();
+                c.fill();
+            }
+
+        }
+
+        function renderDigit(x, y, num, cxt) { //绘制数字
+            cxt.fillStyle = 'blue';
+            for (var i = 0; i < digit[num].length; i++) {
+                for (var j = 0; j < digit[num][i].length; j++) {
+                    if (digit[num][i][j] == 1) {
+                        cxt.beginPath();
+                        cxt.arc(x + (r + 1) + 2 * (r + 1) * j, y + (r + 1) + 2 * (r + 1) * i, r, 0, 2 * Math.PI, false);
+                        cxt.closePath();
+                        cxt.fill();
+                    }
+                }
+            }
+        }
+
+        function addBall(x, y, num) { //x,y:小球起始位置圆心位置 num:要现实的数字
+
+            for (var i = 0; i < digit[num].length; i++) {
+                for (var j = 0; j < digit[num][i].length; j++) {
+                    if (digit[num][i][j] == 1) {
+
+                        var ball = {
+                            x: x + (r + 1) + 2 * (r + 1) * j,
+                            y: y + (r + 1) + 2 * (r + 1) * i,
+                            r: r,
+                            a: 1.5 + Math.random(),
+                            vx: -4 * (Math.pow(-1, Math.ceil(Math.random() * 1000))),
+                            vy: -10,
+                            color: COLOR[random([0, 8])]
+                        }
+                        balls.push(ball);
+                    }
+
+                }
+            }
+        }
+
+        function ballUpdata() { //控制小球运动，及体积碰撞,并且50ms为一帧
+            for (var i = 0; i < balls.length; i++) {
+                balls[i].x = balls[i].x + balls[i].vx;
+                balls[i].y = balls[i].y + balls[i].vy;
+                balls[i].vy = balls[i].vy + balls[i].a;
+                if (balls[i].y >= HEIGHT - balls[i].r) {
+                    balls[i].y = HEIGHT - balls[i].r;
+                    balls[i].vy = -balls[i].vy * 0.6;
+
+                }
+                if (balls[i].x >= WIDTH - balls[i].r) {
+                    balls[i].x = WIDTH - balls[i].r;
+                    balls[i].vx = -balls[i].vx;
+                 
+                }                 
+            }
+            /*性能优化*/
+            var cnt = 0;
+            for(var n=0;n<balls.length;n++){//balls[cnt] 为一个连续的保存的都为在屏幕内的小球
+                if(balls[n].x +balls[n].r >= 0){
+                    balls[cnt++] = balls[n]
+                }
+            }
+            /*balls.splice(Math.min(500,cnt));删除移除画面的小球*/
+            while(balls.length>Math.min(500,cnt)){//控制小球数量
+                balls.pop();
+            }
+        }
+
+        function random(range) {
+            var max = Math.max(range[0], range[1]);
+            var min = Math.min(range[0], range[1]);
+            var diff = Math.random();
+            var val = Math.floor(diff * (max - min + 1) + min);
+
+            return val;
+        }
+    }
+    </script>
+
+</body>
+
+</html>
