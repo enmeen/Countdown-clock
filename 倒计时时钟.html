@@ -6,6 +6,7 @@
 3.在1秒之内balls数组中的信息是不会变化的。所以这时候ballUpdata函数，就在这段时间内50ms为一帧的，对balls中保存的小球属性进行操作。
 4.优化：删除balls中滚出画面的小球
 5.bug：切屏幕后，小球堆积。因为超过了设置的500个小球最大值，将没有小球掉落。画面中小球数低于500.-->
+
 <head>
     <meta charset="UTF-8" />
     <title>倒计时时钟</title>
@@ -15,7 +16,10 @@
         padding: 0;
     }
     /* 撑开屏幕 */
-    html,body,canvas{
+    
+    html,
+    body,
+    canvas {
         height: 100%;
         width: 100%;
     }
@@ -24,7 +28,6 @@
 
 <body>
     <canvas id="canvas"></canvas>
-    
     <script type="text/javascript" src='digit.js'></script>
     <script type="text/javascript">
     window.onload = function() {
@@ -32,14 +35,14 @@
         var WIDTH = document.body.clientWidth;
         var HEIGHT = document.body.clientHeight;
         console.log(HEIGHT);
-        var MARGINLEFT =  Math.round(WIDTH/15);
-        var MARGINTOP = HEIGHT/5; //离顶部长度
-        var r = Math.round(WIDTH/5*4/108)-1;
-        var newTime = new Date(2016, 2, 1, 18, 30, 50).getTime(); //目标日期:注意月份
+        var MARGINLEFT = Math.round(WIDTH / 15);
+        var MARGINTOP = HEIGHT / 5; //离顶部长度
+        var r = Math.round(WIDTH / 5 * 4 / 108) - 1;
+        var newTime = new Date(2016, 2, 3, 18, 30, 50).getTime(); //目标日期:注意月份
         var restTime = getCurrentSecond();
         var balls = []; //用来存储要掉落的小球
         var COLOR = ["#a8a8a8", '#71BFBF', '#F51A1A', '#21E015', '#292929', '#F20D90', '#292929', '#121A89', '#0FDBAD']
-       
+
         var canvas = document.getElementById('canvas');
         canvas.width = WIDTH;
         canvas.height = HEIGHT;
@@ -48,7 +51,7 @@
         setInterval(function() {
             render(c);
             updata();
-            
+
         }, 50);
 
 
@@ -176,18 +179,18 @@
                 if (balls[i].x >= WIDTH - balls[i].r) {
                     balls[i].x = WIDTH - balls[i].r;
                     balls[i].vx = -balls[i].vx;
-                 
-                }                 
+
+                }
             }
             /*性能优化*/
             var cnt = 0;
-            for(var n=0;n<balls.length;n++){//balls[cnt] 为一个连续的保存的都为在屏幕内的小球
-                if(balls[n].x +balls[n].r >= 0){
+            for (var n = 0; n < balls.length; n++) { //balls[cnt] 为一个连续的保存的都为在屏幕内的小球
+                if (balls[n].x + balls[n].r >= 0) {
                     balls[cnt++] = balls[n]
                 }
             }
             /*balls.splice(Math.min(500,cnt));删除移除画面的小球*/
-            while(balls.length>Math.min(500,cnt)){//控制小球数量
+            while (balls.length > Math.min(500, cnt)) { //控制小球数量
                 balls.pop();
             }
         }
@@ -202,7 +205,6 @@
         }
     }
     </script>
-
 </body>
 
 </html>
